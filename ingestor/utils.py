@@ -49,7 +49,13 @@ def fetch_usgs_data(start_time: datetime, end_time: datetime):
 
     try:
         logger.info(f"Fetching data from {params['starttime']} to {params['endtime']}")
-        response = session.get(USGS_API_URL, params=params, timeout=30)
+        # Explicitly request GeoJSON via headers and query params
+        response = session.get(
+            USGS_API_URL, 
+            params=params, 
+            headers={"Accept": "application/json"},
+            timeout=30
+        )
         response.raise_for_status()
         
         data = response.json()

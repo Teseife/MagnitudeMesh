@@ -22,10 +22,12 @@ def is_ocean_event(record: dict) -> bool:
     Determines if a seismic event is likely an ocean/offshore event to be purged.
     """
     props = record.get('properties', {})
-    place = props.get('place', '').lower()
+    place = props.get('place')
     
     if not place:
         return False
+        
+    place = place.lower()
 
     for keyword in OCEAN_KEYWORDS:
         if keyword in place:

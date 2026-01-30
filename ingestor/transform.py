@@ -66,14 +66,14 @@ def flatten_record(record: dict, enrichment_data: dict = None) -> dict:
         "id": usgs_id,
         "magnitude": magnitude,
         "place": place,
-        "time_utc": time_ms,
+        # "time_utc": time_ms, # Removed to match SQL schema
         "incident_time_est": incident_time_est,
         "longitude": coords[0],
         "latitude": coords[1],
         "depth": depth,
         "felt_radius_km": felt_radius,
-        "url": props.get('url'),
+        # "url": props.get('url'), # Removed to match SQL schema
         "felt_count": props.get('felt', 0) or 0,
-        "country": enrichment_data.get('country'),
-        "continent": enrichment_data.get('continent')
+        # "country": enrichment_data.get('country'), # Removed to match SQL schema
+        # "continent": enrichment_data.get('continent') # Removed to match SQL schema
     }

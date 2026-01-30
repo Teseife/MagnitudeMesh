@@ -6,6 +6,11 @@ from datetime import datetime, timedelta
 import requests
 from requests.exceptions import RequestException
 import os
+from dotenv import load_dotenv
+
+# Load .env explicitly from the ingestor directory
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path)
 
 from ingestor.filters import is_ocean_event, enrich_location
 from ingestor.transform import flatten_record
@@ -31,8 +36,8 @@ def load_checkpoint() -> datetime:
         except Exception as e:
             logger.warning(f"Failed to load checkpoint: {e}")
     
-    # Default start date: Jan 1, 2010
-    return datetime(2010, 1, 1)
+    # Default start date: Jan 1, 2016 (Updated requirement)
+    return datetime(2016, 1, 1)
 
 def save_checkpoint(timestamp: datetime):
     """Saves the current timestamp to checkpoint.json."""
@@ -84,10 +89,12 @@ def fetch_and_process_chunk(start: datetime, end: datetime, depth: int = 0):
         logger.error(f"Max recursion depth reached at {start} to {end}. Skipping range.")
         return
 
+    # Optimization: Filter by minmagnitude at API level to save bandwidth
     params = {
         "format": "geojson",
         "starttime": start.isoformat(),
         "endtime": end.isoformat(),
+        "minmagnitude": 2.5, # New requirement: Mag >= 2.5
         "limit": 20000,
         "orderby": "time-asc"
     }
@@ -114,8 +121,21 @@ def fetch_and_process_chunk(start: datetime, end: datetime, depth: int = 0):
                 continue
             
             try:
-                # Enrichment (Geocoding) - Note: Rate limited, might be slow
-                enrichment = enrich_location(record)
+                # Validation: Skip records that violate DB Not-Null constraints
+                props = record.get('properties', {})
+                geom = record.get('geometry', {})
+                coords = geom.get('coordinates', [])
+                
+                # Redundant check (API handles it) but good for safety
+                if props.get('mag') is None or props.get('mag') < 2.5:
+                    continue
+                if not coords or coords[0] is None or coords[1] is None:
+                    continue
+
+                # Enrichment (Geocoding) - DISABLED for speed (5 days -> 30 mins)
+                # Data is currently unused in DB schema anyway.
+                # enrichment = enrich_location(record)
+                enrichment = {}
                 
                 flat_record = flatten_record(record, enrichment)
                 processed_batch.append(flat_record)

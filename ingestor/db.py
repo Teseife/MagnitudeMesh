@@ -6,7 +6,8 @@ from supabase import create_client, Client
 logger = logging.getLogger(__name__)
 
 # Batch size for upserts to avoid payload limits
-BATCH_SIZE = 1000
+# Lowered to 100 to provide faster feedback during slow geocoding runs
+BATCH_SIZE = 100
 
 def get_supabase_client() -> Client:
     url = os.environ.get("SUPABASE_URL")

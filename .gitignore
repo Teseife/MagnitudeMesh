@@ -1,0 +1,27 @@
+# --- Virtual Environment ---
+.venv/
+
+# --- IDE & Editor Configs ---
+.idea/
+.vscode/
+*.swp
+
+.agent/
+.gemini/
+.gsd/
+
+# --- Python-Specific ---
+__pycache__/
+*.pyc
+.env
+
+# --- Node/Frontend-Specific (for later) ---
+node_modules/
+.next/
+build/
+dist//
+usgd.md
+.planning/
+run_ingest_cron.bat
+run_ingest.bat
+C:\Users\Thoma\PycharmProjects\MagnitudeMesh\.planning
