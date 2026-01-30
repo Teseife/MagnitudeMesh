@@ -1,0 +1,5 @@
+requests
+supabase
+pytz
+shapely
+python-dotenv
