@@ -1,9 +1,13 @@
 # Project State
 
 ## Current Phase
-**Phase 2: Visual Foundation** (Next)
+**Phase 3: Visual Foundation** (Next)
 
 ## Progress Log
+- **Phase 2: Resilient Orchestration** (Completed)
+  - Implemented `orchestrator.py` with checkpointing and adaptive splitting.
+  - Refactored modules for batch efficiency and geocoding.
+  - Added Windows automation script.
 - **Phase 1: Ingestor Pipeline** (Completed)
   - Implemented Python ingestor with robust USGS fetching.
   - Added Ocean Purge filter and scientific calculations.
