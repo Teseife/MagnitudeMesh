@@ -3,6 +3,8 @@ import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from ingestor.utils import fetch_usgs_data
+from ingestor.filters import is_ocean_event
+from ingestor.transform import flatten_record
 
 # Load environment variables
 load_dotenv()
@@ -14,7 +16,7 @@ logger = logging.getLogger(__name__)
 def main():
     """
     Main ingestion loop.
-    Currently set up to fetch the last 30 days of data as a test/default.
+    Fetches, filters, transforms, and prepares data.
     """
     logger.info("Starting MagnitudeMesh Ingestor...")
 
@@ -25,14 +27,34 @@ def main():
     logger.info(f"Execution Mode: Fetching from {start_time} to {end_time}")
 
     try:
-        total_records = 0
+        total_fetched = 0
+        total_kept = 0
+        processed_records = []
+
         for batch in fetch_usgs_data(start_time, end_time):
-            # Transformation and Database logic will go here in future phases
             batch_count = len(batch)
-            total_records += batch_count
-            logger.info(f"Processed batch of {batch_count} records.")
+            total_fetched += batch_count
+            
+            for record in batch:
+                # 1. Filter: Ocean Purge
+                if is_ocean_event(record):
+                    continue
+                
+                # 2. Transform: Flatten & Enrich
+                try:
+                    flat_record = flatten_record(record)
+                    processed_records.append(flat_record)
+                    total_kept += 1
+                except Exception as e:
+                    logger.warning(f"Failed to transform record {record.get('id')}: {e}")
+
+            logger.info(f"Batch processed. Fetched: {batch_count}. Total Kept so far: {total_kept}")
+
+            # TODO: In next phase, we will upsert `processed_records` to Supabase here
+            # For now, clear the list to avoid memory issues in a real large run
+            # processed_records.clear() 
         
-        logger.info(f"Ingestion complete. Total records fetched: {total_records}")
+        logger.info(f"Ingestion complete. Fetched: {total_fetched}, Kept: {total_kept}, Purged: {total_fetched - total_kept}")
 
     except Exception as e:
         logger.error(f"Ingestion failed: {e}")
