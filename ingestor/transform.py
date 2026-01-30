@@ -11,49 +11,44 @@ def calculate_felt_radius(magnitude: float, depth_km: float) -> float:
     """
     Calculates the estimated 'felt radius' in kilometers.
     Formula: R = 10^(0.45*M - 1.88) * sqrt(D)
-    
-    :param magnitude: Earthquake magnitude.
-    :param depth_km: Depth in kilometers.
-    :return: Radius in km.
     """
     if magnitude is None or depth_km is None:
         return 0.0
     
-    # Avoid math domain error for 0 or negative depth (unlikely but possible in data errors)
     safe_depth = max(depth_km, 1.0)
     
     try:
-        # 10^(0.45*M - 1.88)
         base_factor = 10 ** (0.45 * magnitude - 1.88)
         radius = base_factor * math.sqrt(safe_depth)
         return round(radius, 2)
     except Exception as e:
-        logger.warning(f"Error calculating radius for M={magnitude}, D={depth_km}: {e}")
+        logger.warning(f"Error calculating radius: {e}")
         return 0.0
 
 def convert_to_est(timestamp_ms: int) -> str:
     """
-    Converts USGS UTC timestamp (ms) to ISO8601 string in EST (America/New_York).
-    
-    :param timestamp_ms: Unix timestamp in milliseconds.
-    :return: ISO8601 formatted string.
+    Converts USGS UTC timestamp (ms) to ISO8601 string in EST.
     """
     if timestamp_ms is None:
         return None
         
-    # Convert ms to seconds
     timestamp_s = timestamp_ms / 1000.0
     utc_dt = datetime.utcfromtimestamp(timestamp_s).replace(tzinfo=pytz.utc)
     est_dt = utc_dt.astimezone(EST_ZONE)
     return est_dt.isoformat()
 
-def flatten_record(record: dict) -> dict:
+def flatten_record(record: dict, enrichment_data: dict = None) -> dict:
     """
     Flattens a USGS GeoJSON feature into a dictionary matching the Supabase schema.
+    Includes optional enrichment data (country, continent).
     
     :param record: USGS GeoJSON feature.
+    :param enrichment_data: Dict containing 'country', 'continent', etc.
     :return: Flattened dictionary.
     """
+    if enrichment_data is None:
+        enrichment_data = {}
+
     props = record.get('properties', {})
     geom = record.get('geometry', {})
     coords = geom.get('coordinates', [None, None, None]) # lon, lat, depth
@@ -71,12 +66,14 @@ def flatten_record(record: dict) -> dict:
         "id": usgs_id,
         "magnitude": magnitude,
         "place": place,
-        "time_utc": time_ms, # Keep original just in case
+        "time_utc": time_ms,
         "incident_time_est": incident_time_est,
         "longitude": coords[0],
         "latitude": coords[1],
         "depth": depth,
         "felt_radius_km": felt_radius,
         "url": props.get('url'),
-        "felt_count": props.get('felt', 0) or 0 # Default to 0 if None
+        "felt_count": props.get('felt', 0) or 0,
+        "country": enrichment_data.get('country'),
+        "continent": enrichment_data.get('continent')
     }

@@ -3,3 +3,4 @@ supabase
 pytz
 shapely
 python-dotenv
+geopy

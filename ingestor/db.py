@@ -19,6 +19,7 @@ def upsert_records(records: List[Dict[str, Any]], table_name: str = "earthquakes
     """
     Upserts a list of records into the specified Supabase table.
     Handles batching to prevent API errors.
+    Catches errors per batch to ensure pipeline resilience.
     
     :param records: List of flattened record dictionaries.
     :param table_name: Name of the table in Supabase.
@@ -29,6 +30,8 @@ def upsert_records(records: List[Dict[str, Any]], table_name: str = "earthquakes
     client = get_supabase_client()
     total_records = len(records)
     
+    logger.info(f"Starting batch upsert for {total_records} records...")
+    
     for i in range(0, total_records, BATCH_SIZE):
         batch = records[i : i + BATCH_SIZE]
         try:
@@ -37,5 +40,5 @@ def upsert_records(records: List[Dict[str, Any]], table_name: str = "earthquakes
             logger.info(f"Upserted batch {i // BATCH_SIZE + 1}: {len(batch)} records.")
         except Exception as e:
             logger.error(f"Failed to upsert batch starting at index {i}: {e}")
-            # Depending on strictness, we might want to re-raise or continue
-            # For now, we log and continue to try subsequent batches
+            # Continue to next batch - don't crash the pipeline
+            continue
