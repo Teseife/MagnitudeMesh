@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { Earthquake } from '@/lib/types';
+import type { Earthquake, DemoMode } from '@/lib/types';
 
 // Dynamic import to avoid SSR issues with Cesium
 const Globe = dynamic(() => import('./Globe'), {
@@ -26,6 +26,8 @@ interface GlobeWrapperProps {
   selectedEarthquake: Earthquake | null;
   onSelectEarthquake: (earthquake: Earthquake | null) => void;
   showImpactZones: boolean;
+  resetTimestamp: number;
+  demoMode: DemoMode;
 }
 
 export default function GlobeWrapper(props: GlobeWrapperProps) {
