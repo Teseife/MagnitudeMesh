@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import List, Dict, Any
+from datetime import datetime, timedelta
 from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
@@ -43,3 +44,32 @@ def upsert_records(records: List[Dict[str, Any]], table_name: str = "earthquakes
             logger.error(f"Failed to upsert batch starting at index {i}: {e}")
             # Continue to next batch - don't crash the pipeline
             continue
+
+def get_latest_timestamp() -> datetime:
+    """
+    Queries Supabase for the timestamp of the most recent earthquake.
+    Returns a default date (24 hours ago) if no data exists or on error.
+    """
+    try:
+        client = get_supabase_client()
+        # Fetch the single most recent record, ordered by time descending
+        response = client.table("earthquakes") \
+            .select("incident_time_est") \
+            .order("incident_time_est", desc=True) \
+            .limit(1) \
+            .execute()
+
+        data = response.data
+        if data and len(data) > 0:
+            timestamp_str = data[0].get('incident_time_est')
+            if timestamp_str:
+                # Parse ISO string to datetime object
+                # datetime.fromisoformat handles ISO format returned by Supabase
+                return datetime.fromisoformat(timestamp_str)
+    
+    except Exception as e:
+        logger.warning(f"Failed to fetch latest timestamp from DB: {e}. Falling back to default.")
+
+    # Default fallback: Return 24 hours ago to ensure we capture recent data
+    # if the DB is empty or unreachable (safe overlap)
+    return datetime.utcnow() - timedelta(hours=24)

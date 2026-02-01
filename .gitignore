@@ -66,3 +66,4 @@ run_ingest_cron.bat
 run_ingest.bat
 *.pem
 checkpoint.json
+ingestor/test_usgs_fetch.py

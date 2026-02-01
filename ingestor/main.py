@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from ingestor.utils import fetch_usgs_data
 from ingestor.filters import is_ocean_event
 from ingestor.transform import flatten_record
-from ingestor.db import upsert_records
+from ingestor.db import upsert_records, get_latest_timestamp
 
 # Load environment variables
 load_dotenv()
@@ -86,10 +86,20 @@ def main():
             exit(1)
             
     else: # Default to 'cron' logic
-        # Run for the last 1 hour + minimal buffer to catch late-arriving events
-        # Cron runs hourly, so 1h 10m overlap ensures no gaps.
+        # Data-Driven Checkpoint:
+        # Fetch everything since the last known earthquake in our DB.
+        # This handles gaps automatically (e.g., system down for 3 days -> fetch 3 days).
+        start_time = get_latest_timestamp()
+        
+        # Add a tiny buffer (1 min) to avoid fetching the exact same last record
+        # though UPSERT handles duplicates safely anyway.
+        # Ensure we don't go into the future if DB has "future" timestamps (rare bug)
         end_time = datetime.utcnow()
-        start_time = end_time - timedelta(hours=1, minutes=10)
+        
+        if start_time > end_time:
+             logger.warning(f"DB timestamp {start_time} is in the future? Resetting to 1 hour ago.")
+             start_time = end_time - timedelta(hours=1)
+             
         run_pipeline(start_time, end_time)
 
 if __name__ == "__main__":
