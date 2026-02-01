@@ -12,6 +12,7 @@ import {
   EyeOff,
   RotateCcw,
   Beaker,
+  List,
 } from 'lucide-react';
 import { cn, formatNumber } from '@/lib/utils';
 import type { MagnitudeRange, DemoMode } from '@/lib/types';
@@ -34,6 +35,8 @@ interface NavbarProps {
   onResetView: () => void;
   demoMode: DemoMode;
   onDemoModeChange: (mode: DemoMode) => void;
+  isFeedOpen: boolean;
+  onToggleFeed: () => void;
 }
 
 export default function Navbar({
@@ -49,6 +52,8 @@ export default function Navbar({
   onResetView,
   demoMode,
   onDemoModeChange,
+  isFeedOpen,
+  onToggleFeed,
 }: NavbarProps) {
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [demoDropdownOpen, setDemoDropdownOpen] = useState(false);
@@ -65,6 +70,7 @@ export default function Navbar({
     { value: 'database_error', label: 'Database Error', description: 'Simulate DB connection failure' },
     { value: 'network_error', label: 'Network Error', description: 'Simulate offline/connection loss' },
     { value: 'rendering_error', label: 'Rendering Error', description: 'Simulate WebGL/Globe crash' },
+    { value: 'feed_empty', label: 'Empty Feed', description: 'Simulate no recent earthquakes' },
   ];
 
   return (
@@ -185,6 +191,22 @@ export default function Navbar({
               </button>
             ))}
           </div>
+
+          {/* Feed Toggle */}
+          <button
+            onClick={onToggleFeed}
+            className={cn(
+              'flex items-center gap-1.5 px-2 py-1.5 rounded-lg ml-2',
+              'border transition-all font-mono text-xs',
+              isFeedOpen
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:border-zinc-600'
+            )}
+            title="Toggle Live Feed"
+          >
+            <List className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">FEED</span>
+          </button>
 
           {/* Impact Zone Toggle */}
           <button

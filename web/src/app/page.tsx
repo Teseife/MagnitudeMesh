@@ -5,12 +5,14 @@ import { motion } from 'framer-motion';
 import Globe from '@/components/Globe';
 import Navbar from '@/components/ui/Navbar';
 import DetailsPanel from '@/components/ui/DetailsPanel';
-import { fetchEarthquakes, fetchEarthquakeStats, getAvailableYears } from '@/lib/supabase';
+import MagnitudeFeed from '@/components/ui/MagnitudeFeed';
+import { fetchEarthquakes, fetchEarthquakeStats, fetchRecentEarthquakes, getAvailableYears } from '@/lib/supabase';
 import type { Earthquake, MagnitudeRange, DemoMode } from '@/lib/types';
 
 export default function Home() {
   // Data state
   const [earthquakes, setEarthquakes] = useState<Earthquake[]>([]);
+  const [recentEarthquakes, setRecentEarthquakes] = useState<Earthquake[]>([]);
   const [stats, setStats] = useState({
     totalCount: 0,
     avgMagnitude: 0,
@@ -19,6 +21,7 @@ export default function Home() {
   });
   const [years, setYears] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFeedLoading, setIsFeedLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filter state
@@ -30,6 +33,7 @@ export default function Home() {
   const [selectedEarthquake, setSelectedEarthquake] = useState<Earthquake | null>(null);
   const [showImpactZones, setShowImpactZones] = useState(true);
   const [resetTimestamp, setResetTimestamp] = useState<number>(0);
+  const [isFeedOpen, setIsFeedOpen] = useState(false);
 
   // Load available years on mount
   useEffect(() => {
@@ -43,6 +47,30 @@ export default function Home() {
     }
     loadYears();
   }, []);
+
+  // Fetch recent earthquakes for the feed
+  useEffect(() => {
+    async function loadRecent() {
+      if (demoMode === 'feed_empty') {
+        setRecentEarthquakes([]);
+        return;
+      }
+
+      setIsFeedLoading(true);
+      try {
+        const recent = await fetchRecentEarthquakes();
+        setRecentEarthquakes(recent);
+      } catch (err) {
+        console.error('Failed to load recent earthquakes:', err);
+      } finally {
+        setIsFeedLoading(false);
+      }
+    }
+
+    if (isFeedOpen) {
+      loadRecent();
+    }
+  }, [isFeedOpen, demoMode]);
 
   // Fetch earthquakes when filters or demo mode changes
   useEffect(() => {
@@ -129,6 +157,8 @@ export default function Home() {
         onResetView={handleResetView}
         demoMode={demoMode}
         onDemoModeChange={setDemoMode}
+        isFeedOpen={isFeedOpen}
+        onToggleFeed={() => setIsFeedOpen(!isFeedOpen)}
       />
 
       {/* Globe Container */}
@@ -162,6 +192,18 @@ export default function Home() {
           />
         )}
       </div>
+
+      {/* Magnitude Feed Panel */}
+      <MagnitudeFeed
+        isOpen={isFeedOpen}
+        onClose={() => setIsFeedOpen(false)}
+        earthquakes={recentEarthquakes}
+        onSelectEarthquake={(eq) => {
+            handleSelectEarthquake(eq);
+            setIsFeedOpen(false); // Close feed on selection to show map
+        }}
+        isLoading={isFeedLoading}
+      />
 
       {/* Details Panel */}
       <DetailsPanel

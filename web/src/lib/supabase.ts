@@ -96,6 +96,24 @@ export async function fetchEarthquakeStats(year?: number): Promise<{
   return { totalCount, avgMagnitude, maxMagnitude, totalFelt };
 }
 
+export async function fetchRecentEarthquakes(limit: number = 50): Promise<Earthquake[]> {
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  
+  const { data, error } = await supabase
+    .from('earthquakes')
+    .select('*')
+    .gte('incident_time_est', twentyFourHoursAgo)
+    .order('incident_time_est', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching recent earthquakes:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
 export async function getAvailableYears(): Promise<number[]> {
   // Return years from 2016 to current year
   const currentYear = new Date().getFullYear();

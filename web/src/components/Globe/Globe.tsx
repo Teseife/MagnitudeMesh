@@ -7,6 +7,7 @@ import {
   PointGraphics,
   EllipseGraphics,
   ImageryLayer,
+  LabelGraphics,
 } from 'resium';
 import type { CesiumMovementEvent, RootEventTarget } from 'resium';
 import {
@@ -18,6 +19,10 @@ import {
   Math as CesiumMath,
   Entity as CesiumEntity,
   ImageryProvider,
+  Cartesian2,
+  VerticalOrigin,
+  LabelStyle,
+  Matrix4,
 } from 'cesium';
 // CSS is loaded via layout.tsx from /cesium/Widgets/widgets.css
 
@@ -104,6 +109,11 @@ export default function Globe({
   useEffect(() => {
     if (resetTimestamp > 0 && viewerRef.current) {
       const viewer = viewerRef.current;
+      
+      // Ensure we detach from any tracked entity or local reference frame
+      viewer.trackedEntity = undefined;
+      viewer.camera.lookAtTransform(Matrix4.IDENTITY);
+
       viewer.camera.flyTo({
         destination: Cartesian3.fromDegrees(0, 20, 20000000), // Default global view
         orientation: {
@@ -120,6 +130,10 @@ export default function Globe({
   useEffect(() => {
     if (selectedEarthquake && viewerRef.current) {
       const viewer = viewerRef.current;
+      
+      // Ensure we aren't tracking an entity which can lock camera rotation
+      viewer.trackedEntity = undefined;
+      
       viewer.camera.flyTo({
         destination: Cartesian3.fromDegrees(
           selectedEarthquake.longitude,
@@ -208,12 +222,27 @@ export default function Globe({
             }}
           >
             <PointGraphics
-              pixelSize={isSelected ? pixelSize * 1.5 : pixelSize}
-              color={isSelected ? Color.CYAN : color}
-              outlineColor={isSelected ? Color.WHITE : Color.BLACK.withAlpha(0.5)}
-              outlineWidth={isSelected ? 2 : 1}
+              pixelSize={isSelected ? pixelSize * 2.5 : pixelSize}
+              color={isSelected ? Color.WHITE : color}
+              outlineColor={isSelected ? Color.CYAN : Color.BLACK.withAlpha(0.5)}
+              outlineWidth={isSelected ? 3 : 1}
               // Removed disableDepthTestDistance to fix transparency issue
             />
+
+            {/* Label for selected point */}
+            {isSelected && (
+              <LabelGraphics
+                text={eq.place}
+                font="bold 14px JetBrains Mono, monospace"
+                fillColor={Color.WHITE}
+                outlineColor={Color.BLACK}
+                outlineWidth={2}
+                style={LabelStyle.FILL_AND_OUTLINE}
+                verticalOrigin={VerticalOrigin.BOTTOM}
+                pixelOffset={new Cartesian2(0, -15)}
+                disableDepthTestDistance={Number.POSITIVE_INFINITY}
+              />
+            )}
 
             {/* Impact Zone / Felt Radius */}
             {showImpactZones && eq.felt_radius_km && eq.felt_radius_km > 0 && (

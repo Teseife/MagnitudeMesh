@@ -31,4 +31,4 @@ export interface SelectedEarthquake extends Earthquake {
   isSelected: boolean;
 }
 
-export type DemoMode = 'normal' | 'database_error' | 'network_error' | 'rendering_error';
+export type DemoMode = 'normal' | 'database_error' | 'network_error' | 'rendering_error' | 'feed_empty';
