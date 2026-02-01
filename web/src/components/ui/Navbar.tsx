@@ -11,9 +11,10 @@ import {
   Eye,
   EyeOff,
   RotateCcw,
+  Beaker,
 } from 'lucide-react';
 import { cn, formatNumber } from '@/lib/utils';
-import type { MagnitudeRange } from '@/lib/types';
+import type { MagnitudeRange, DemoMode } from '@/lib/types';
 
 interface NavbarProps {
   years: number[];
@@ -31,6 +32,8 @@ interface NavbarProps {
   onToggleImpactZones: () => void;
   isLoading: boolean;
   onResetView: () => void;
+  demoMode: DemoMode;
+  onDemoModeChange: (mode: DemoMode) => void;
 }
 
 export default function Navbar({
@@ -44,14 +47,24 @@ export default function Navbar({
   onToggleImpactZones,
   isLoading,
   onResetView,
+  demoMode,
+  onDemoModeChange,
 }: NavbarProps) {
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const [demoDropdownOpen, setDemoDropdownOpen] = useState(false);
 
   const magnitudeOptions: { value: MagnitudeRange; label: string; color: string }[] = [
     { value: 'all', label: 'ALL', color: 'bg-zinc-600' },
     { value: 'low', label: '2.5-4', color: 'bg-emerald-600' },
     { value: 'medium', label: '4-5.5', color: 'bg-amber-500' },
     { value: 'high', label: '5.5+', color: 'bg-red-500' },
+  ];
+
+  const demoOptions: { value: DemoMode; label: string; description: string }[] = [
+    { value: 'normal', label: 'Normal Operation', description: 'Standard application state' },
+    { value: 'database_error', label: 'Database Error', description: 'Simulate DB connection failure' },
+    { value: 'network_error', label: 'Network Error', description: 'Simulate offline/connection loss' },
+    { value: 'rendering_error', label: 'Rendering Error', description: 'Simulate WebGL/Globe crash' },
   ];
 
   return (
@@ -207,6 +220,76 @@ export default function Navbar({
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden lg:inline">RESET</span>
           </button>
+
+          {/* Demo Mode Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setDemoDropdownOpen(!demoDropdownOpen)}
+              className={cn(
+                'flex items-center gap-2 px-3 py-1.5 rounded-lg ml-2',
+                'bg-indigo-500/10 border border-indigo-500/30',
+                'hover:bg-indigo-500/20 hover:border-indigo-500/50 transition-colors',
+                'font-mono text-sm group'
+              )}
+            >
+              <Beaker className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300" />
+              <span className="text-indigo-400 group-hover:text-indigo-300 hidden xl:inline">
+                {demoMode === 'normal' ? 'DEMO' : 'DEMO: ACTIVE'}
+              </span>
+              <ChevronDown
+                className={cn(
+                  'w-3.5 h-3.5 text-indigo-400 transition-transform',
+                  demoDropdownOpen && 'rotate-180'
+                )}
+              />
+            </button>
+
+            {demoDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={cn(
+                  'absolute top-full mt-2 right-0 w-56',
+                  'bg-zinc-900/95 backdrop-blur-xl rounded-lg',
+                  'border border-zinc-700/50 shadow-xl shadow-black/50',
+                  'overflow-hidden py-1'
+                )}
+              >
+                <div className="px-3 py-2 border-b border-zinc-800/50 mb-1">
+                  <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                    Select Simulation Mode
+                  </p>
+                </div>
+                {demoOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => {
+                      onDemoModeChange(opt.value);
+                      setDemoDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'w-full px-3 py-2 text-left transition-colors',
+                      'hover:bg-indigo-500/10',
+                      demoMode === opt.value ? 'bg-indigo-500/5' : ''
+                    )}
+                  >
+                    <p
+                      className={cn(
+                        'font-mono text-xs font-bold mb-0.5',
+                        demoMode === opt.value ? 'text-indigo-400' : 'text-zinc-300'
+                      )}
+                    >
+                      {opt.label}
+                    </p>
+                    <p className="text-[10px] text-zinc-500 font-mono">
+                      {opt.description}
+                    </p>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </div>
         </div>
 
         {/* Right: Stats */}

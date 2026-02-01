@@ -21,7 +21,7 @@ import {
 } from 'cesium';
 // CSS is loaded via layout.tsx from /cesium/Widgets/widgets.css
 
-import type { Earthquake } from '@/lib/types';
+import type { Earthquake, DemoMode } from '@/lib/types';
 import { getMagnitudeSize, getDepthColor } from '@/lib/utils';
 
 // Set Cesium Ion token
@@ -38,6 +38,7 @@ interface GlobeProps {
   onSelectEarthquake: (earthquake: Earthquake | null) => void;
   showImpactZones: boolean;
   resetTimestamp: number;
+  demoMode: DemoMode;
 }
 
 export default function Globe({
@@ -46,6 +47,7 @@ export default function Globe({
   onSelectEarthquake,
   showImpactZones,
   resetTimestamp,
+  demoMode,
 }: GlobeProps) {
   const viewerRef = useRef<CesiumViewer | null>(null);
   const [imageryProvider, setImageryProvider] = useState<ImageryProvider | null>(null);
@@ -140,8 +142,8 @@ export default function Globe({
     return new Color(r / 255, g / 255, b / 255, a / 255);
   }, []);
 
-  // Show error state if imagery failed to load
-  if (imageryError) {
+  // Show error state if imagery failed to load or rendering_error demo mode is active
+  if (imageryError || demoMode === 'rendering_error') {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-[#0a0b0f]">
         <div className="text-center p-8 max-w-md">
@@ -149,7 +151,11 @@ export default function Globe({
             <span className="text-3xl">🌍</span>
           </div>
           <h2 className="text-xl font-mono text-red-400 mb-2">GLOBE ERROR</h2>
-          <p className="text-zinc-400 text-sm">{imageryError}</p>
+          <p className="text-zinc-400 text-sm">
+            {demoMode === 'rendering_error'
+              ? 'WebGL Context Lost: Failed to initialize graphics device.'
+              : imageryError}
+          </p>
         </div>
       </div>
     );

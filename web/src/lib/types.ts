@@ -30,3 +30,5 @@ export interface EarthquakeStats {
 export interface SelectedEarthquake extends Earthquake {
   isSelected: boolean;
 }
+
+export type DemoMode = 'normal' | 'database_error' | 'network_error' | 'rendering_error';

@@ -6,7 +6,7 @@ import Globe from '@/components/Globe';
 import Navbar from '@/components/ui/Navbar';
 import DetailsPanel from '@/components/ui/DetailsPanel';
 import { fetchEarthquakes, fetchEarthquakeStats, getAvailableYears } from '@/lib/supabase';
-import type { Earthquake, MagnitudeRange } from '@/lib/types';
+import type { Earthquake, MagnitudeRange, DemoMode } from '@/lib/types';
 
 export default function Home() {
   // Data state
@@ -24,6 +24,7 @@ export default function Home() {
   // Filter state
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [magnitudeRange, setMagnitudeRange] = useState<MagnitudeRange>('all');
+  const [demoMode, setDemoMode] = useState<DemoMode>('normal');
 
   // UI state
   const [selectedEarthquake, setSelectedEarthquake] = useState<Earthquake | null>(null);
@@ -43,9 +44,33 @@ export default function Home() {
     loadYears();
   }, []);
 
-  // Fetch earthquakes when filters change
+  // Fetch earthquakes when filters or demo mode changes
   useEffect(() => {
     async function loadData() {
+      // Handle Demo Modes
+      if (demoMode === 'database_error') {
+        setIsLoading(true);
+        // Simulate delay then error
+        setTimeout(() => {
+          setIsLoading(false);
+          setError('Failed to connect to database: Connection timeout (500)');
+          setEarthquakes([]);
+        }, 1000);
+        return;
+      }
+
+      if (demoMode === 'network_error') {
+        setIsLoading(true);
+        // Simulate delay then error
+        setTimeout(() => {
+          setIsLoading(false);
+          setError('Network request failed: User is offline');
+          setEarthquakes([]);
+        }, 800);
+        return;
+      }
+
+      // Normal Mode (or rendering_error which is handled by Globe component)
       setIsLoading(true);
       setError(null);
 
@@ -70,7 +95,7 @@ export default function Home() {
     }
 
     loadData();
-  }, [selectedYear, magnitudeRange]);
+  }, [selectedYear, magnitudeRange, demoMode]);
 
   // Handler for selecting an earthquake
   const handleSelectEarthquake = useCallback((earthquake: Earthquake | null) => {
@@ -102,6 +127,8 @@ export default function Home() {
         onToggleImpactZones={() => setShowImpactZones(!showImpactZones)}
         isLoading={isLoading}
         onResetView={handleResetView}
+        demoMode={demoMode}
+        onDemoModeChange={setDemoMode}
       />
 
       {/* Globe Container */}
@@ -117,10 +144,10 @@ export default function Home() {
               </h2>
               <p className="text-zinc-400 mb-4">{error}</p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => demoMode === 'normal' ? window.location.reload() : setDemoMode('normal')}
                 className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/50 rounded-lg text-cyan-400 font-mono text-sm hover:bg-cyan-500/30 transition-colors"
               >
-                RETRY CONNECTION
+                {demoMode !== 'normal' ? 'EXIT DEMO MODE' : 'RETRY CONNECTION'}
               </button>
             </div>
           </div>
@@ -131,6 +158,7 @@ export default function Home() {
             onSelectEarthquake={handleSelectEarthquake}
             showImpactZones={showImpactZones}
             resetTimestamp={resetTimestamp}
+            demoMode={demoMode}
           />
         )}
       </div>
