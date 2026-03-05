@@ -77,6 +77,16 @@ def main():
         try:
             start_date = datetime.strptime(args.start, "%Y-%m-%d")
             end_date = datetime.strptime(args.end, "%Y-%m-%d")
+            if start_date >= end_date:
+                logger.error(
+                    f"Start date must be strictly before end date. "
+                    f"Got start={start_date.date()}, end={end_date.date()}."
+                )
+                exit(1)
+            now = datetime.utcnow()
+            if end_date > now:
+                logger.warning("End date is in the future. Clamping to current UTC time.")
+                end_date = now
             # For massive backfills, we could split by month here, but fetch_usgs_data handles
             # pagination/splitting recursively. A month-by-month loop here would be safer for memory
             # if we weren't yielding generators, but since we are, direct call is okay.

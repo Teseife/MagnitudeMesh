@@ -24,6 +24,13 @@ CHECKPOINT_FILE = "ingestor/checkpoint.json"
 USGS_API_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 MAX_RECURSION_DEPTH = 5 # Safety limit to prevent infinite splitting
 
+# Earliest date for which USGS global catalog data is considered reliable.
+# Used as both the minimum valid checkpoint date and the backfill start default.
+USGS_DATA_START_DATE = datetime(2015, 1, 1)
+
+# Default start date used when the checkpoint is missing or invalid.
+DEFAULT_BACKFILL_START = datetime(2016, 1, 1)
+
 def load_checkpoint() -> datetime:
     """Loads the last successfully processed timestamp from checkpoint.json."""
     if os.path.exists(CHECKPOINT_FILE):
@@ -32,12 +39,20 @@ def load_checkpoint() -> datetime:
                 data = json.load(f)
                 timestamp_str = data.get('last_processed_timestamp')
                 if timestamp_str:
-                    return datetime.fromisoformat(timestamp_str)
+                    loaded = datetime.fromisoformat(timestamp_str)
+                    # Sanity check: reject timestamps outside a sensible range
+                    max_valid = datetime.utcnow()
+                    if USGS_DATA_START_DATE <= loaded <= max_valid:
+                        return loaded
+                    logger.warning(
+                        f"Checkpoint timestamp {loaded} is outside valid range "
+                        f"[{USGS_DATA_START_DATE}, {max_valid}]. Resetting to default."
+                    )
         except Exception as e:
             logger.warning(f"Failed to load checkpoint: {e}")
     
     # Default start date: Jan 1, 2016 (Updated requirement)
-    return datetime(2016, 1, 1)
+    return DEFAULT_BACKFILL_START
 
 def save_checkpoint(timestamp: datetime):
     """Saves the current timestamp to checkpoint.json."""
