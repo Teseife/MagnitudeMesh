@@ -1,6 +1,7 @@
 # MagnitudeMesh | Global Seismic Command Center
 
 MagnitudeMesh is a real-time, 3D visualization platform for global seismic activity. It combines a robust, self-healing data ingestion pipeline with a high-performance web interface to track, analyze, and visualize earthquakes as they happen.
+<img width="1510" height="793" alt="image" src="https://github.com/user-attachments/assets/d3886dc4-c44c-4db5-83a1-cc1f3e93a210" />
 
 
 ## Overview
