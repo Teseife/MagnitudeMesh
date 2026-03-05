@@ -14,6 +14,7 @@ usgd.md
 .idea/
 .vscode/
 *.swp
+*.swo
 .DS_Store
 
 # --- Virtual Environment (Python) ---
@@ -27,6 +28,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
 .Python
 pip-log.txt
 pip-delete-this-directory.txt
@@ -40,6 +42,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 /coverage
+coverage/
+.nyc_output/
 
 # --- Next.js ---
 .next/
@@ -56,10 +60,14 @@ web/public/cesium/
 
 # --- Environment Variables ---
 .env
+.env.local
+.env.*.local
 .env*.local
 .env.development.local
 .env.test.local
 .env.production.local
+**/.env
+**/.env*
 
 # --- Scripts/Misc ---
 run_ingest_cron.bat
@@ -67,3 +75,6 @@ run_ingest.bat
 *.pem
 checkpoint.json
 ingestor/test_usgs_fetch.py
+
+# --- OS Files ---
+Thumbs.db
