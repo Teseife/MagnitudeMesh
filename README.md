@@ -4,6 +4,8 @@ MagnitudeMesh is a real-time, 3D visualization platform for global seismic activ
 <img width="1510" height="793" alt="image" src="https://github.com/user-attachments/assets/d3886dc4-c44c-4db5-83a1-cc1f3e93a210" />
 
 
+[Check It out here!](https://magnitude-mesh-hiog.vercel.app/)
+
 ## Overview
 
 This project provides a complete end-to-end solution for seismic monitoring:
