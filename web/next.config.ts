@@ -1,7 +1,34 @@
 import type { NextConfig } from "next";
 
+// HTTP security headers applied to every route
+const securityHeaders = [
+  // Prevent the page from being embedded in an iframe on other origins (clickjacking)
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  // Block browsers from MIME-sniffing the content type
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  // Control how much referrer information is included in requests
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // Restrict access to browser features not needed by this app
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Force HTTPS for 2 years, including subdomains
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  // Apply security headers to all routes
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: securityHeaders,
+      },
+    ];
+  },
 
   // Turbopack configuration (Next.js 16+)
   turbopack: {

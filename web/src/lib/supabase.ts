@@ -5,16 +5,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-  });
+  throw new Error(
+    'Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL and ' +
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. ' +
+    'See CONTRIBUTING.md for setup instructions.'
+  );
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Magnitude range mappings
 const MAGNITUDE_RANGES: Record<MagnitudeRange, [number, number]> = {
